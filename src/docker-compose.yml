@@ -16,5 +16,11 @@ services:
   grafana:
     image: grafana/grafana
 
+  jaeger:
+    image: jaegertracing/all-in-one
+
+  prometheus:
+    image: prom/prometheus
+
 volumes:
   postgres_catalog:

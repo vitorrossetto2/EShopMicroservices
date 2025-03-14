@@ -19,17 +19,47 @@ services:
   grafana:
     ports:
       - "3000:3000"
- 
+
+  jaeger:
+    container_name: jaeger
+    ports:
+      - "16686:16686"
+      - "14250:14250"
+      - "6831:6831/udp"
+      - "4317:4317"
+      - "14268:14268"
+    environment:
+      - COLLECTOR_ZIPKIN_HTTP_PORT=9411
+      - COLLECTOR_OTLP_ENABLED=true
+
+  prometheus:
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    environment : 
+      - OTEL_EXPORTER_OTLP_METRICS_ENDPOINT=http://0.0.0.0:9090/api/v1/otlp/v1/metrics
+      - OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
+    command:
+      - --web.enable-otlp-receiver
+      - --config.file=/etc/prometheus/prometheus.yml
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+
   catalog.api:
+    container_name: catalog-api
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_HTTP_PORTS=8080
       - ASPNETCORE_HTTPS_PORTS=8081
       - ConnectionStrings__Database=Server=catalogdb;Port=5432;Database=CatalogDb;User Id=postgres;Password=postgres;Include Error Detail=true
       - Serilog__WriteTo__1__Args__uri=http://loki:3100
+      - OtelTrace__Endpoint=http://jaeger:4317
+      - OtelMetric__Endpoint=http://prometheus:9090/api/v1/otlp/v1/metrics
     depends_on:
       - catalogdb
       - loki 
+      - jaeger
+      - prometheus 
     ports:
       - "6000:8080"
       - "6060:8081"
