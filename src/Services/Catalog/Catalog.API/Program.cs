@@ -8,7 +8,6 @@ using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using Serilog;
-using Serilog.Sinks.Grafana.Loki;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -16,7 +15,6 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-Serilog.Debugging.SelfLog.Enable(Console.Out);
 builder.Host.UseSerilog((context, config) =>
 {
 	config
@@ -47,10 +45,6 @@ builder.Services.AddOpenTelemetry()
 			{
 				opt.Protocol = OpenTelemetry.Exporter.OtlpExportProtocol.HttpProtobuf;
 				opt.Endpoint = new Uri(builder.Configuration.GetValue<string>("OtelMetric:Endpoint")!);
-			})
-			.AddConsoleExporter((exporterOptions, metricReaderOptions) =>
-			{
-				metricReaderOptions.PeriodicExportingMetricReaderOptions.ExportIntervalMilliseconds = 1000;
 			}); 
 	}); 
 
