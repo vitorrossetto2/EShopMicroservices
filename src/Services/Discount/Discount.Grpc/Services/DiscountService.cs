@@ -25,7 +25,17 @@ public class DiscountService
         return couponModel;
     }
 
-    public override async Task<CouponModel> CreateDiscount(CreateDiscountRequest request, ServerCallContext context)
+    public override async Task<ListDiscountsResponse> ListDiscounts(ListDiscountsRequest request, ServerCallContext context)
+	{
+        var productNames = request.ProductNames.ToArray();
+
+		var coupons = await dbContext.Coupons.Where(x => productNames.Contains(x.ProductName)).ToListAsync();
+        
+        var couponModels = coupons.Adapt<List<CouponModel>>();
+		return new ListDiscountsResponse { Coupons = { couponModels } };
+	}
+
+	public override async Task<CouponModel> CreateDiscount(CreateDiscountRequest request, ServerCallContext context)
     {
         var coupon = request.Coupon.Adapt<Coupon>();
         if (coupon is null)

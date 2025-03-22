@@ -95,9 +95,11 @@ services:
       - Serilog__WriteTo__1__Args__uri=http://loki:3100
       - OtelTrace__Endpoint=http://jaeger:4317
       - OtelMetric__Endpoint=http://prometheus:9090/api/v1/otlp/v1/metrics
+      - GrpcSettings__DiscountUrl=https://discount.grpc:8081
     depends_on:
       - basketdb
       - distributedcache
+      - discount.grpc
     ports:
       - "6001:8080"
       - "6061:8081"

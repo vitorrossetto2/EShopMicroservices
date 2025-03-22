@@ -2,7 +2,12 @@ using Discount.Grpc.Data;
 using Discount.Grpc.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
+using OpenTelemetry.Metrics;
 using Serilog;
+using HealthChecks.UI.Client;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -26,7 +31,41 @@ builder.Services.AddSwaggerGen(c =>
 		new OpenApiInfo { Title = "gRPC transcoding", Version = "v1" });
 });
 
+// Configure OpenTelemetry Tracing
+builder.Services.AddOpenTelemetry()
+	.WithTracing(tracerProviderBuilder =>
+	{
+		tracerProviderBuilder
+			.AddGrpcCoreInstrumentation()  // Capture incoming Grpc requests
+			.AddHttpClientInstrumentation() // Capture outgoing HTTP requests
+			.SetResourceBuilder(ResourceBuilder.CreateDefault().AddService("Discount.Grpc"))
+			.AddOtlpExporter(options =>
+			{
+				options.Endpoint = new Uri(builder.Configuration.GetValue<string>("OtelTrace:Endpoint")!);
+			});
+	})
+	.WithMetrics(metrics =>
+	{
+		metrics.SetResourceBuilder(ResourceBuilder.CreateDefault().AddService("Discount.Grpc"))
+			.AddRuntimeInstrumentation() // Capture .NET runtime metrics
+			.AddOtlpExporter(opt =>
+			{
+				opt.Protocol = OpenTelemetry.Exporter.OtlpExportProtocol.HttpProtobuf;
+				opt.Endpoint = new Uri(builder.Configuration.GetValue<string>("OtelMetric:Endpoint")!);
+			});
+	});
+
+
+builder.Services.AddHealthChecks()
+	.AddSqlite(builder.Configuration.GetConnectionString("Database")!);
+
 var app = builder.Build();
+
+app.UseHealthChecks("/health",
+	new HealthCheckOptions
+	{
+		ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
+	});
 
 app.UseSwagger();
 if (app.Environment.IsDevelopment())
