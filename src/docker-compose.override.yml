@@ -63,6 +63,12 @@ services:
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
 
+  load.test:
+     ports:
+      - "3001:3001"
+     depends_on:
+      - basket.api
+
   catalog.api:
     container_name: catalog-api
     environment:
