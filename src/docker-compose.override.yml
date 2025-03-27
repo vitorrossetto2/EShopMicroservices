@@ -1,4 +1,15 @@
 services:
+  portainer:
+    container_name: portainer
+    restart: always
+    ports:
+      - "8000:8000"
+      - "9443:9443"
+      - "9000:9000"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer_data:/data
+
   catalogdb:
     container_name: catalogdb
     environment:
@@ -58,7 +69,7 @@ services:
       - OTEL_EXPORTER_OTLP_METRICS_ENDPOINT=http://0.0.0.0:9090/api/v1/otlp/v1/metrics
       - OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
     command:
-      - --web.enable-otlp-receiver
+      - --enable-feature=otlp-write-receiver
       - --config.file=/etc/prometheus/prometheus.yml
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
@@ -68,7 +79,6 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_HTTP_PORTS=8080
-      - ASPNETCORE_HTTPS_PORTS=8081
       - ConnectionStrings__Database=Server=catalogdb;Port=5432;Database=CatalogDb;User Id=postgres;Password=postgres;Include Error Detail=true
       - Serilog__WriteTo__1__Args__uri=http://loki:3100
       - OtelTrace__Endpoint=http://jaeger:4317
@@ -80,7 +90,6 @@ services:
       - prometheus 
     ports:
       - "6000:8080"
-      - "6060:8081"
     volumes:
       - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
       - ${APPDATA}/ASP.NET/Https:/home/app/.aspnet/https:ro
@@ -89,7 +98,6 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_HTTP_PORTS=8080
-      - ASPNETCORE_HTTPS_PORTS=8081
       - ConnectionStrings__Database=Server=basketdb;Port=5432;Database=BasketDb;User Id=postgres;Password=postgres;Include Error Detail=true
       - ConnectionStrings__Redis=distributedcache:6379
       - Serilog__WriteTo__1__Args__uri=http://loki:3100
@@ -100,7 +108,6 @@ services:
       - distributedcache
     ports:
       - "6001:8080"
-      - "6061:8081"
     volumes:
       - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
       - ${APPDATA}/ASP.NET/Https:/home/app/.aspnet/https:ro
@@ -109,14 +116,12 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_HTTP_PORTS=8080
-      - ASPNETCORE_HTTPS_PORTS=8081
       - ConnectionStrings__Database=Data Source=discountdb
       - Serilog__WriteTo__1__Args__uri=http://loki:3100
       - OtelTrace__Endpoint=http://jaeger:4317
       - OtelMetric__Endpoint=http://prometheus:9090/api/v1/otlp/v1/metrics
     ports:
       - "6002:8080"
-      - "6062:8081"
     volumes:
       - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
       - ${APPDATA}/ASP.NET/Https:/home/app/.aspnet/https:ro
