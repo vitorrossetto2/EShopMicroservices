@@ -5,13 +5,7 @@ services:
     image: portainer/portainer-ce
 
   catalogdb:
-    image: postgres
-
-  catalog.api:
-    image: ${DOCKER_REGISTRY-}catalogapi
-    build:
-      context: .
-      dockerfile: Services/Catalog/Catalog.API/Dockerfile
+    image: postgres 
 
   loki:
     image: grafana/loki
@@ -30,6 +24,18 @@ services:
 
   distributedcache:
     image: redis
+
+  load.test:
+    image: ${DOCKER_REGISTRY-}loadtest
+    build:
+      context: .
+      dockerfile: LoadTests/K6LoadTests/Dockerfile
+
+  catalog.api:
+    image: ${DOCKER_REGISTRY-}catalogapi
+    build:
+      context: .
+      dockerfile: Services/Catalog/Catalog.API/Dockerfile
 
   basket.api:
     image: ${DOCKER_REGISTRY-}basketapi
