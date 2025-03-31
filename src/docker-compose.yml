@@ -31,6 +31,12 @@ services:
       context: .
       dockerfile: LoadTests/K6LoadTests/Dockerfile
 
+  chaos.engineering:
+    image: ${DOCKER_REGISTRY-}chaosengineering
+    build:
+      context: .
+      dockerfile: ChaosEngineering/PumbaChaosEngineering/Dockerfile
+
   catalog.api:
     image: ${DOCKER_REGISTRY-}catalogapi
     build:
