@@ -7,7 +7,6 @@ services:
       - "9443:9443"
       - "9000:9000"
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
       - portainer_data:/data
 
   catalogdb:
@@ -103,10 +102,8 @@ services:
       - jaeger
       - prometheus 
     ports:
-      - "6000:8080"
-    volumes:
-      - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
-      - ${APPDATA}/ASP.NET/Https:/home/app/.aspnet/https:ro
+      - "6050:8080"
+
 
   basket.api:
     environment:
@@ -117,16 +114,14 @@ services:
       - Serilog__WriteTo__1__Args__uri=http://loki:3100
       - OtelTrace__Endpoint=http://jaeger:4317
       - OtelMetric__Endpoint=http://prometheus:9090/api/v1/otlp/v1/metrics
-      - GrpcSettings__DiscountUrl=https://discount.grpc:8081
+      - GrpcSettings__DiscountUrl=http://discount.grpc:8080
     depends_on:
       - basketdb
       - distributedcache
       - discount.grpc
     ports:
-      - "6001:8080"
-    volumes:
-      - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
-      - ${APPDATA}/ASP.NET/Https:/home/app/.aspnet/https:ro
+      - "6051:8080"
+
 
   discount.grpc:
     environment:
@@ -137,7 +132,4 @@ services:
       - OtelTrace__Endpoint=http://jaeger:4317
       - OtelMetric__Endpoint=http://prometheus:9090/api/v1/otlp/v1/metrics
     ports:
-      - "6002:8080"
-    volumes:
-      - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
-      - ${APPDATA}/ASP.NET/Https:/home/app/.aspnet/https:ro
+      - "6052:8080"
